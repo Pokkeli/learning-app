@@ -34,6 +34,21 @@ function App() {
   const [category, setCategory] = useState("");
   const [error, setError] = useState("");
 
+  const [serverEntries, setServerEntries] = useState<LearningEntryData[]>([]);
+  const [loadError, setLoadError] = useState("");
+
+  async function loadServerEntries() {
+    setLoadError("");
+    try {
+      const response = await fetch("http://localhost:3001/api/entries");
+      if (!response.ok) throw new Error("Could not load entries");
+      const data: LearningEntryData[] = await response.json();
+      setServerEntries(data);
+    } catch {
+      setLoadError("Could not connect to the backend.");
+    }
+  }
+
   function handleAddEntry() {
     // 1. Validate the input values.
     if (topic.trim() === "" || learned.trim() === "") {
@@ -138,6 +153,19 @@ function App() {
       {entries.map((entry) => (
         <LearningEntry key={entry.id} entry={entry} />
       ))}
+
+      <section>
+        <h2>Entries from the backend</h2>
+        <button type="button" onClick={loadServerEntries}>
+          Load from backend
+        </button>
+        {loadError && <p>{loadError}</p>}
+        <ul>
+          {serverEntries.map((entry) => (
+            <li key={entry.id}>{entry.topic}</li>
+          ))}
+        </ul>
+      </section>
     </main>
   );
 }
