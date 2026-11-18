@@ -18,3 +18,11 @@
 **Why REST**
 
 - The app only handles entries and it only needs simple operations like GET and POST.
+
+## State Management
+
+- **Local state:** the form fields and messages, because only the form uses them.
+
+- **Zustand:** the list of entries, so different pages can share the same list. `loadEntries()` fetches from the backend and puts the data into the store with `setEntries()`.
+
+- **MariaDB:** Zustand resets when you refresh the page, but the database keeps everything saved. So after a refresh I just load the entries again with `GET`.

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import LearningEntry from "../components/LearningEntry";
-import type { LearningEntryData } from "../types/LearningEntryData";
+import { useLearningStore } from "../store/useLearningStore";
+import { loadEntries } from "../api/entries";
+
 
 function EntriesPage() {
   const studentName: string = "Nico Poutanen";
-
+  
+  // Local state because these form values are only used by this form.
   const [topic, setTopic] = useState("");
   const [date, setDate] = useState("");
   const [learned, setLearned] = useState("");
@@ -13,36 +16,20 @@ function EntriesPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const [serverEntries, setServerEntries] = useState<LearningEntryData[]>([]);
+  const entries = useLearningStore((state) => state.entries);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    let ignore = false;
-
-    async function loadInitialEntries() {
-      try {
-        const response = await fetch("http://localhost:3001/api/entries");
-        if (!response.ok) throw new Error("Could not load entries");
-        const data: LearningEntryData[] = await response.json();
-        if (!ignore) setServerEntries(data);
-      } catch {
-        if (!ignore) setLoadError("Could not load entries from the backend.");
-      }
-    }
-
-    void loadInitialEntries();
-    return () => {
-      ignore = true;
-    };
+    loadEntries().catch(() => {
+      setLoadError("Could not load entries from the backend.");
+    });
   }, []);
+
 
   async function loadServerEntries() {
     setLoadError("");
     try {
-      const response = await fetch("http://localhost:3001/api/entries");
-      if (!response.ok) throw new Error("Could not load entries");
-      const data: LearningEntryData[] = await response.json();
-      setServerEntries(data);
+      await loadEntries();
     } catch (error) {
       setLoadError("Could not load entries from the backend.");
       throw error;
@@ -186,7 +173,7 @@ function EntriesPage() {
           Load from backend
         </button>
         {loadError && <p>{loadError}</p>}
-        {serverEntries.map((entry) => (
+        {entries.map((entry) => (
           <LearningEntry key={entry.id} entry={entry} />
         ))}
       </section>
